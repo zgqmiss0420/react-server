@@ -6,9 +6,9 @@ const UserModel = require('../db/models')
 const filter = {password: 0, __v: 0} // 查询的过滤(去除文档中的指定属性)
 
 /* GET home page. */
-router.get('/', function(req, res, next) {
+/*router.get('/', function(req, res, next) {
   res.render('index', { title: 'Express' });
-});
+});*/
 
 /*
 1. 获取请求参数数据
@@ -86,6 +86,37 @@ router.post('/login', function (req, res) {
     }
   })
 })
+
+router.post('/update',function (req,res) {
+  const userid = req.cookies.userid;
+  if(!userid){
+    return res.send({code: 1, msg: '请先登录'});
+  }
+  UserModel.findByIdAndUpdate({_id: userid}, req.body, function (err, user) {// user是数据库中原来的数据
+    const {_id, username, type} = user
+    // node端 ...不可用
+    // const data = {...req.body, _id, username, type}
+    // 合并用户信息
+    const data = Object.assign(req.body, {_id, username, type})
+    // assign(obj1, obj2, obj3,...) // 将多个指定的对象进行合并, 返回一个合并后的对象
+    res.send({code: 0, data})
+  })
+})
+
+// 根据cookie获取对应的user
+router.get('/user', function (req, res) {
+  // 取出cookie中的userid
+  const userid = req.cookies.userid
+  if(!userid) {
+    return res.send({code: 1, msg: '请先登录'})
+  }
+  
+  // 查询对应的user
+  UserModel.findOne({_id: userid}, filter, function (err, user) {
+    return res.send({code: 0, data: user})
+  })
+})
+
 
 
 module.exports = router;
